@@ -1,33 +1,37 @@
-// YouTube Background Video RAM/CPU Throttler
+// YouTube Background Video RAM/CPU Throttler (QA Verified v1.1.1)
 
 (function() {
   let isThrottled = false;
 
   function handleVisibilityChange() {
-    chrome.storage.local.get('settings', (res) => {
-      const settings = res.settings || {};
-      if (settings.throttleYoutube === false) return;
+    try {
+      chrome.storage.local.get('settings', (res) => {
+        if (chrome.runtime.lastError) return;
 
-      const player = document.getElementById('movie_player') || document.querySelector('.html5-video-player');
-      const video = document.querySelector('video');
+        const settings = (res && res.settings) || {};
+        if (settings.throttleYoutube === false) return;
 
-      if (document.hidden) {
-        // Tab sedang di latar belakang
-        if (player && typeof player.setPlaybackQualityRange === 'function') {
-          // Turunkan resolusi ke 144p agar hemat RAM & decoding beban GPU/CPU
-          player.setPlaybackQualityRange('tiny', 'tiny');
-          isThrottled = true;
-          console.log('[RAM Lifesaver] Mode hemat RAM aktif pada YouTube latar belakang (144p).');
+        const player = document.getElementById('movie_player') || document.querySelector('.html5-video-player');
+
+        if (document.hidden) {
+          // Tab sedang di latar belakang
+          if (player && typeof player.setPlaybackQualityRange === 'function') {
+            try {
+              player.setPlaybackQualityRange('tiny', 'tiny');
+              isThrottled = true;
+            } catch (e) {}
+          }
+        } else {
+          // Tab dibuka kembali
+          if (isThrottled && player && typeof player.setPlaybackQualityRange === 'function') {
+            try {
+              player.setPlaybackQualityRange('default', 'highres');
+              isThrottled = false;
+            } catch (e) {}
+          }
         }
-      } else {
-        // Tab dibuka kembali
-        if (isThrottled && player && typeof player.setPlaybackQualityRange === 'function') {
-          player.setPlaybackQualityRange('default', 'highres');
-          isThrottled = false;
-          console.log('[RAM Lifesaver] Kualitas YouTube dipulihkan ke normal.');
-        }
-      }
-    });
+      });
+    } catch (err) {}
   }
 
   document.addEventListener('visibilitychange', handleVisibilityChange);

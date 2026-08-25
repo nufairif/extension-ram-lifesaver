@@ -1,4 +1,4 @@
-// RAM Lifesaver - Background Service Worker
+// RAM Lifesaver - Background Service Worker (QA Verified v1.1.1)
 
 const DEFAULT_SETTINGS = {
   autoDiscard: true,
@@ -20,7 +20,7 @@ function isWhitelisted(url, whitelist = []) {
     const urlObj = new URL(url);
     const hostname = urlObj.hostname.toLowerCase();
     return whitelist.some(item => {
-      const cleanItem = item.trim().toLowerCase();
+      const cleanItem = (item || '').trim().toLowerCase();
       return cleanItem && (hostname === cleanItem || hostname.endsWith('.' + cleanItem));
     });
   } catch (e) {
@@ -34,7 +34,6 @@ chrome.runtime.onInstalled.addListener(async () => {
   if (!data.settings) {
     await chrome.storage.local.set({ settings: DEFAULT_SETTINGS });
   } else {
-    // Pastikan field baru terisi jika update dari versi sebelumnya
     const merged = Object.assign({}, DEFAULT_SETTINGS, data.settings);
     await chrome.storage.local.set({ settings: merged });
   }
@@ -79,10 +78,10 @@ async function updateTabCountBadge() {
 
     if (settings.maxTabsLimit > 0 && count >= settings.maxTabsLimit) {
       chrome.action.setBadgeText({ text: `${count}` });
-      chrome.action.setBadgeBackgroundColor({ color: '#ff2a54' }); // Merah jika melewati batas
+      chrome.action.setBadgeBackgroundColor({ color: '#ff2a54' });
     } else {
       chrome.action.setBadgeText({ text: `${count}` });
-      chrome.action.setBadgeBackgroundColor({ color: '#38ef7d' }); // Hijau aman
+      chrome.action.setBadgeBackgroundColor({ color: '#38ef7d' });
     }
   } catch (e) {}
 }
@@ -107,10 +106,11 @@ async function checkAndDiscardIdleTabs() {
     if (tab.discarded) continue;
     if (settings.ignoreAudible && tab.audible) continue;
     if (settings.ignorePinned && tab.pinned) continue;
+    if (!tab.url || tab.url.startsWith('chrome://') || tab.url.startsWith('brave://') || tab.url.startsWith('edge://')) continue;
     if (isWhitelisted(tab.url, settings.whitelist)) continue;
-    if (tab.url.startsWith('chrome://') || tab.url.startsWith('brave://') || tab.url.startsWith('edge://')) continue;
 
-    const lastActive = tabLastActive[tab.id] || now;
+    // Gunakan native tab.lastAccessed jika didukung, fallback ke memory / now
+    const lastActive = tab.lastAccessed || tabLastActive[tab.id] || now;
     if (now - lastActive >= thresholdMs) {
       try {
         await chrome.tabs.discard(tab.id);
@@ -138,7 +138,9 @@ async function closeDuplicateTabs() {
   }
 
   if (duplicateIds.length > 0) {
-    await chrome.tabs.remove(duplicateIds);
+    try {
+      await chrome.tabs.remove(duplicateIds);
+    } catch (e) {}
   }
   return duplicateIds.length;
 }
@@ -154,7 +156,7 @@ async function checkDuplicatesIfEnabled() {
 chrome.commands.onCommand.addListener(async (command) => {
   if (command === 'discard-current-tab') {
     const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    if (activeTab && !activeTab.discarded && !activeTab.url.startsWith('chrome://') && !activeTab.url.startsWith('brave://')) {
+    if (activeTab && !activeTab.discarded && activeTab.url && !activeTab.url.startsWith('chrome://') && !activeTab.url.startsWith('brave://')) {
       try {
         await chrome.tabs.discard(activeTab.id);
       } catch (e) {}
@@ -166,8 +168,8 @@ chrome.commands.onCommand.addListener(async (command) => {
       if (tab.active || tab.discarded) continue;
       if (settings.ignoreAudible && tab.audible) continue;
       if (settings.ignorePinned && tab.pinned) continue;
+      if (!tab.url || tab.url.startsWith('chrome://') || tab.url.startsWith('brave://')) continue;
       if (isWhitelisted(tab.url, settings.whitelist)) continue;
-      if (tab.url.startsWith('chrome://') || tab.url.startsWith('brave://')) continue;
 
       try {
         await chrome.tabs.discard(tab.id);
@@ -188,8 +190,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         if (tab.active || tab.discarded) continue;
         if (settings.ignoreAudible && tab.audible) continue;
         if (settings.ignorePinned && tab.pinned) continue;
+        if (!tab.url || tab.url.startsWith('chrome://') || tab.url.startsWith('brave://')) continue;
         if (isWhitelisted(tab.url, settings.whitelist)) continue;
-        if (tab.url.startsWith('chrome://') || tab.url.startsWith('brave://')) continue;
 
         try {
           await chrome.tabs.discard(tab.id);
@@ -208,10 +210,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
       for (const tab of tabs) {
         if (tab.active || tab.pinned) continue;
-        if (tab.url.startsWith('chrome://') || tab.url.startsWith('brave://')) continue;
+        if (!tab.url || tab.url.startsWith('chrome://') || tab.url.startsWith('brave://')) continue;
 
         tabsToSave.push({
-          title: tab.title,
+          title: tab.title || tab.url,
           url: tab.url,
           favIconUrl: tab.favIconUrl || ''
         });
@@ -244,7 +246,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       if (tab && tab.url) {
         try {
           const u = new URL(tab.url);
-          sendResponse({ domain: u.hostname });
+          sendResponse({ domain: u.hostname || null });
         } catch(e) {
           sendResponse({ domain: null });
         }

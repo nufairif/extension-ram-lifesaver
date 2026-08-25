@@ -1,4 +1,4 @@
-// RAM Lifesaver - Popup Logic v1.1
+// RAM Lifesaver - Popup Logic (QA Verified v1.1.1)
 
 document.addEventListener('DOMContentLoaded', async () => {
   // Elements: Stats
@@ -71,6 +71,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (res && res.domain) {
         currentActiveDomain = res.domain;
         currentTabDomainText.textContent = res.domain;
+        btnAddCurrentDomain.style.display = 'block';
+      } else {
+        currentActiveDomain = '';
+        currentTabDomainText.textContent = 'Tidak tersedia';
+        btnAddCurrentDomain.style.display = 'none';
       }
     });
   }
@@ -86,7 +91,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     toggleAutoDuplicates.checked = !!settings.autoCloseDuplicates;
     inputMaxTabs.value = settings.maxTabsLimit || 20;
 
-    currentWhitelist = settings.whitelist || ['web.whatsapp.com', 'mail.google.com', 'discord.com', 'teams.microsoft.com'];
+    currentWhitelist = Array.isArray(settings.whitelist) ? settings.whitelist : ['web.whatsapp.com', 'mail.google.com', 'discord.com', 'teams.microsoft.com'];
     renderWhitelist();
     updateEngineStatus(toggleAutoDiscard.checked);
   }
@@ -104,7 +109,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   async function saveSettings() {
     const updated = {
       autoDiscard: toggleAutoDiscard.checked,
-      idleMinutes: parseInt(selectIdleMinutes.value, 10),
+      idleMinutes: parseInt(selectIdleMinutes.value, 10) || 3,
       throttleYoutube: toggleThrottleYoutube.checked,
       ignoreAudible: toggleAudible.checked,
       ignorePinned: togglePinned.checked,
@@ -121,27 +126,33 @@ document.addEventListener('DOMContentLoaded', async () => {
     el.addEventListener('change', saveSettings);
   });
 
-  // 4. Whitelist Management
+  // 4. Whitelist Management (Safe DOM Injection)
   function renderWhitelist() {
     whitelistTags.innerHTML = '';
     currentWhitelist.forEach((domain, idx) => {
       const chip = document.createElement('div');
       chip.className = 'tag-chip';
-      chip.innerHTML = `<span>${domain}</span><span class="tag-delete" data-index="${idx}">&times;</span>`;
-      whitelistTags.appendChild(chip);
-    });
 
-    document.querySelectorAll('.tag-delete').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        const index = parseInt(e.target.dataset.index, 10);
-        currentWhitelist.splice(index, 1);
+      const domainSpan = document.createElement('span');
+      domainSpan.textContent = domain;
+
+      const deleteBtn = document.createElement('span');
+      deleteBtn.className = 'tag-delete';
+      deleteBtn.innerHTML = '&times;';
+      deleteBtn.addEventListener('click', () => {
+        currentWhitelist.splice(idx, 1);
         saveSettings();
         renderWhitelist();
       });
+
+      chip.appendChild(domainSpan);
+      chip.appendChild(deleteBtn);
+      whitelistTags.appendChild(chip);
     });
   }
 
   function addDomainToWhitelist(domain) {
+    if (!domain) return;
     const clean = domain.trim().toLowerCase().replace(/^https?:\/\//, '').split('/')[0];
     if (clean && !currentWhitelist.includes(clean)) {
       currentWhitelist.push(clean);

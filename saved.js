@@ -1,4 +1,4 @@
-// RAM Lifesaver - Saved Tabs Manager Logic with Export & Import
+// RAM Lifesaver - Saved Tabs Manager Logic (QA Verified v1.1.1)
 
 document.addEventListener('DOMContentLoaded', async () => {
   const container = document.getElementById('groupsContainer');
@@ -7,6 +7,16 @@ document.addEventListener('DOMContentLoaded', async () => {
   const btnExport = document.getElementById('btnExport');
   const btnImport = document.getElementById('btnImport');
   const fileInput = document.getElementById('fileInput');
+
+  // Helper untuk memvalidasi protokol URL
+  function isValidHttpUrl(string) {
+    try {
+      const url = new URL(string);
+      return url.protocol === 'http:' || url.protocol === 'https:';
+    } catch (_) {
+      return false;
+    }
+  }
 
   async function loadGroups() {
     const { savedGroups = [] } = await chrome.storage.local.get('savedGroups');
@@ -31,7 +41,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       const dateSpan = document.createElement('span');
       dateSpan.className = 'group-date';
-      dateSpan.textContent = `📅 Disimpan pada: ${group.date} (${group.tabs.length} tab)`;
+      const validTabsCount = (group.tabs || []).length;
+      dateSpan.textContent = `📅 Disimpan pada: ${group.date || 'Tanpa Tanggal'} (${validTabsCount} tab)`;
 
       const actionsDiv = document.createElement('div');
       actionsDiv.className = 'group-actions';
@@ -57,16 +68,17 @@ document.addEventListener('DOMContentLoaded', async () => {
       const tabList = document.createElement('ul');
       tabList.className = 'tab-list';
 
-      group.tabs.forEach((tab, tabIndex) => {
+      (group.tabs || []).forEach((tab, tabIndex) => {
         const item = document.createElement('li');
         item.className = 'tab-item';
 
         const link = document.createElement('a');
         link.className = 'tab-link';
-        link.href = tab.url;
+        link.href = isValidHttpUrl(tab.url) ? tab.url : '#';
         link.target = '_blank';
+        link.rel = 'noopener noreferrer';
 
-        if (tab.favIconUrl) {
+        if (tab.favIconUrl && isValidHttpUrl(tab.favIconUrl)) {
           const icon = document.createElement('img');
           icon.className = 'tab-favicon';
           icon.src = tab.favIconUrl;
@@ -74,7 +86,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           link.appendChild(icon);
         }
 
-        const titleText = document.createTextNode(tab.title || tab.url);
+        const titleText = document.createTextNode(tab.title || tab.url || 'Halaman Tanpa Judul');
         link.appendChild(titleText);
 
         const btnRemove = document.createElement('button');
@@ -96,9 +108,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   async function restoreGroup(groupIndex) {
     const { savedGroups = [] } = await chrome.storage.local.get('savedGroups');
     const group = savedGroups[groupIndex];
-    if (group && group.tabs) {
+    if (group && Array.isArray(group.tabs)) {
       for (const tab of group.tabs) {
-        chrome.tabs.create({ url: tab.url, active: false });
+        if (tab && tab.url && isValidHttpUrl(tab.url)) {
+          chrome.tabs.create({ url: tab.url, active: false });
+        }
       }
       savedGroups.splice(groupIndex, 1);
       await chrome.storage.local.set({ savedGroups });
@@ -117,7 +131,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   async function removeTabFromGroup(groupIndex, tabIndex) {
     const { savedGroups = [] } = await chrome.storage.local.get('savedGroups');
-    if (savedGroups[groupIndex]) {
+    if (savedGroups[groupIndex] && savedGroups[groupIndex].tabs) {
       savedGroups[groupIndex].tabs.splice(tabIndex, 1);
       if (savedGroups[groupIndex].tabs.length === 0) {
         savedGroups.splice(groupIndex, 1);
@@ -145,7 +159,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     downloadAnchor.remove();
   });
 
-  // 2. Import JSON Backup
+  // 2. Import JSON Backup dengan Validasi Schema
   btnImport.addEventListener('click', () => {
     fileInput.click();
   });
@@ -158,15 +172,31 @@ document.addEventListener('DOMContentLoaded', async () => {
     reader.onload = async (e) => {
       try {
         const importedData = JSON.parse(e.target.result);
-        if (Array.isArray(importedData)) {
-          const { savedGroups = [] } = await chrome.storage.local.get('savedGroups');
-          const combined = importedData.concat(savedGroups);
-          await chrome.storage.local.set({ savedGroups: combined });
-          alert(`Berhasil mengimpor ${importedData.length} grup tab!`);
-          loadGroups();
-        } else {
-          alert('Format file backup JSON tidak valid.');
+        if (!Array.isArray(importedData)) {
+          throw new Error('Data harus berupa array grup tab');
         }
+
+        // Sanitasi dan validasi format
+        const sanitized = importedData.filter(g => g && Array.isArray(g.tabs)).map(g => ({
+          id: g.id || 'group_' + Math.random(),
+          date: g.date || new Date().toLocaleString('id-ID'),
+          tabs: g.tabs.filter(t => t && t.url && isValidHttpUrl(t.url)).map(t => ({
+            title: String(t.title || t.url),
+            url: String(t.url),
+            favIconUrl: t.favIconUrl ? String(t.favIconUrl) : ''
+          }))
+        })).filter(g => g.tabs.length > 0);
+
+        if (sanitized.length === 0) {
+          alert('Tidak ditemukan data tab valid di dalam file backup.');
+          return;
+        }
+
+        const { savedGroups = [] } = await chrome.storage.local.get('savedGroups');
+        const combined = sanitized.concat(savedGroups);
+        await chrome.storage.local.set({ savedGroups: combined });
+        alert(`Berhasil mengimpor ${sanitized.length} grup tab!`);
+        loadGroups();
       } catch (err) {
         alert('Gagal membaca file: ' + err.message);
       }

@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RAM Lifesaver</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header class="header">
+      <div class="brand">
+        <div class="logo-icon">⚡</div>
+        <div class="brand-text">
+          <h1>RAM Lifesaver</h1>
+          <span class="badge">v1.1 Super Optimizer</span>
+        </div>
+      </div>
+      <div class="status-indicator active" id="engineStatus">Aktif</div>
+    </header>
+
+    <!-- Nav Tabs -->
+    <nav class="tab-nav">
+      <button class="nav-btn active" data-target="panelDashboard">Dashboard</button>
+      <button class="nav-btn" data-target="panelSettings">Pengaturan</button>
+      <button class="nav-btn" data-target="panelWhitelist">Whitelist</button>
+      <button class="nav-btn" data-target="panelHotkeys">Hotkey</button>
+    </nav>
+
+    <!-- Panel 1: Dashboard -->
+    <div id="panelDashboard" class="tab-panel active">
+      <!-- Stats Dashboard -->
+      <section class="stats-card">
+        <div class="stat-item">
+          <span class="stat-value" id="totalTabs">-</span>
+          <span class="stat-label">Total Tab</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item highlight-sleeping">
+          <span class="stat-value" id="sleepingTabs">-</span>
+          <span class="stat-label">Tab Tertidur</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item highlight-ram">
+          <span class="stat-value" id="estimatedSaved">- MB</span>
+          <span class="stat-label">RAM Dihemat</span>
+        </div>
+      </section>
+
+      <!-- Primary Quick Actions -->
+      <section class="actions-section">
+        <button class="btn btn-primary" id="btnSleepAll">
+          <span class="btn-icon">💤</span>
+          <div class="btn-text">
+            <strong>Tidurkan Tab Latar</strong>
+            <small>Bebaskan RAM seketika</small>
+          </div>
+        </button>
+
+        <button class="btn btn-secondary" id="btnConsolidate">
+          <span class="btn-icon">📑</span>
+          <div class="btn-text">
+            <strong>Satukan Tab (OneTab Mode)</strong>
+            <small>Simpan & tutup tab latar (Hemat 95% RAM)</small>
+          </div>
+        </button>
+
+        <button class="btn btn-tertiary" id="btnCloseDuplicates">
+          <span class="btn-icon">🔍</span>
+          <div class="btn-text">
+            <strong>Tutup Tab Duplikat</strong>
+            <small>Bersihkan URL kembar yang terbuka</small>
+          </div>
+        </button>
+      </section>
+    </div>
+
+    <!-- Panel 2: Pengaturan -->
+    <div id="panelSettings" class="tab-panel">
+      <section class="settings-section">
+        <div class="setting-row">
+          <div class="setting-info">
+            <label for="toggleAutoDiscard">Auto-Sleep Tab</label>
+            <small>Tidurkan tab tidak aktif secara otomatis</small>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="toggleAutoDiscard" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-info">
+            <label for="selectIdleMinutes">Tidur Setelah</label>
+            <small>Durasi tab tidak disentuh</small>
+          </div>
+          <select id="selectIdleMinutes" class="select-dropdown">
+            <option value="1">1 Menit (Agresif)</option>
+            <option value="3" selected>3 Menit (Seimbang)</option>
+            <option value="5">5 Menit</option>
+            <option value="10">10 Menit</option>
+            <option value="15">15 Menit</option>
+          </select>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-info">
+            <label for="toggleThrottleYoutube">YouTube Stream Saver</label>
+            <small>Turunkan ke 144p saat video di background</small>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="toggleThrottleYoutube" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-info">
+            <label for="toggleAudible">Kecualikan Tab Suara</label>
+            <small>Jangan tidurkan saat memutar audio/video</small>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="toggleAudible" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-info">
+            <label for="togglePinned">Kecualikan Pinned Tab</label>
+            <small>Jangan tidurkan tab yang dipin</small>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="togglePinned" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-info">
+            <label for="toggleAutoDuplicates">Auto-Tutup Duplikat</label>
+            <small>Tutup otomatis saat buka URL kembar</small>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="toggleAutoDuplicates">
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-info">
+            <label for="inputMaxTabs">Batas Maksimal Tab</label>
+            <small>Indikator merah jika melebihi batas</small>
+          </div>
+          <input type="number" id="inputMaxTabs" class="number-input" min="5" max="100" value="20">
+        </div>
+      </section>
+    </div>
+
+    <!-- Panel 3: Whitelist -->
+    <div id="panelWhitelist" class="tab-panel">
+      <section class="whitelist-section">
+        <p class="whitelist-desc">Website di daftar ini <strong>tidak akan pernah</strong> ditidurkan secara otomatis:</p>
+        
+        <div class="whitelist-add-box">
+          <input type="text" id="inputNewDomain" placeholder="contoh: web.whatsapp.com" class="text-input">
+          <button id="btnAddDomain" class="btn-add">+</button>
+        </div>
+
+        <button id="btnAddCurrentDomain" class="btn-quick-add">
+          + Tambahkan Situs Saat Ini (<span id="currentTabDomainText">-</span>)
+        </button>
+
+        <div class="tags-container" id="whitelistTags">
+          <!-- Tag chips dirender via JavaScript -->
+        </div>
+      </section>
+    </div>
+
+    <!-- Panel 4: Hotkeys -->
+    <div id="panelHotkeys" class="tab-panel">
+      <section class="hotkeys-section">
+        <div class="hotkey-item">
+          <div class="hotkey-info">
+            <strong>Tidurkan Tab Ini</strong>
+            <small>Langsung bebaskan memori tab aktif</small>
+          </div>
+          <kbd class="hotkey-badge">Alt + S</kbd>
+        </div>
+
+        <div class="hotkey-item">
+          <div class="hotkey-info">
+            <strong>Tidurkan Semua Tab Latar</strong>
+            <small>Bekukan seluruh tab background</small>
+          </div>
+          <kbd class="hotkey-badge">Alt + Shift + S</kbd>
+        </div>
+      </section>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <button class="link-btn" id="btnOpenSaved">📂 Kelola Tab Tersimpan (<span id="savedGroupsCount">0</span>)</button>
+      <div id="toastMessage" class="toast hidden"></div>
+    </footer>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

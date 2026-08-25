@@ -1,0 +1,50 @@
+{
+  "manifest_version": 3,
+  "name": "RAM Lifesaver - Brave Super Optimizer",
+  "version": "1.1.0",
+  "description": "Penghemat RAM Otomatis: Auto-sleep tab, Whitelist, Deteksi duplikat, YouTube throttler, dan Shortcut keyboard.",
+  "permissions": [
+    "tabs",
+    "storage",
+    "alarms"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "content_scripts": [
+    {
+      "matches": ["*://*.youtube.com/*"],
+      "js": ["youtube_optimizer.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "commands": {
+    "discard-current-tab": {
+      "suggested_key": {
+        "default": "Alt+S",
+        "windows": "Alt+S"
+      },
+      "description": "Tidurkan tab saat ini"
+    },
+    "discard-all-background-tabs": {
+      "suggested_key": {
+        "default": "Alt+Shift+S",
+        "windows": "Alt+Shift+S"
+      },
+      "description": "Tidurkan semua tab di latar belakang"
+    }
+  }
+}

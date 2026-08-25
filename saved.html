@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RAM Lifesaver - Kelola Tab Tersimpan</title>
+  <link rel="stylesheet" href="saved.css">
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <div class="brand">
+        <div class="logo">⚡</div>
+        <div>
+          <h1>RAM Lifesaver — Tab Tersimpan</h1>
+          <p>Daftar grup tab yang telah diringkas untuk menghemat memori.</p>
+        </div>
+      </div>
+      <div class="header-buttons">
+        <button id="btnExport" class="btn btn-secondary">📥 Export JSON</button>
+        <button id="btnImport" class="btn btn-secondary">📤 Import Backup</button>
+        <input type="file" id="fileInput" accept=".json" style="display: none;">
+        <button id="btnClearAll" class="btn btn-danger">Hapus Semua</button>
+      </div>
+    </header>
+
+    <main id="groupsContainer" class="groups-container">
+      <div class="empty-state" id="emptyState">
+        <div class="empty-icon">📂</div>
+        <h3>Belum ada tab yang disimpan</h3>
+        <p>Gunakan tombol "Satukan Tab (OneTab Mode)" di popup ekstensi untuk menyimpan dan meringkas tab aktif Anda.</p>
+      </div>
+    </main>
+  </div>
+
+  <script src="saved.js"></script>
+</body>
+</html>

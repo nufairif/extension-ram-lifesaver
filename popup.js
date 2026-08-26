@@ -20,6 +20,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const toggleThrottleYoutube = document.getElementById('toggleThrottleYoutube');
   const toggleAudible = document.getElementById('toggleAudible');
   const togglePinned = document.getElementById('togglePinned');
+  const toggleProtectForms = document.getElementById('toggleProtectForms');
   const toggleAutoDuplicates = document.getElementById('toggleAutoDuplicates');
   const inputMaxTabs = document.getElementById('inputMaxTabs');
 
@@ -88,6 +89,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     toggleThrottleYoutube.checked = settings.throttleYoutube !== false;
     toggleAudible.checked = settings.ignoreAudible !== false;
     togglePinned.checked = settings.ignorePinned !== false;
+    toggleProtectForms.checked = settings.protectForms !== false;
     toggleAutoDuplicates.checked = !!settings.autoCloseDuplicates;
     inputMaxTabs.value = settings.maxTabsLimit || 20;
 
@@ -113,6 +115,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       throttleYoutube: toggleThrottleYoutube.checked,
       ignoreAudible: toggleAudible.checked,
       ignorePinned: togglePinned.checked,
+      protectForms: toggleProtectForms.checked,
       autoCloseDuplicates: toggleAutoDuplicates.checked,
       maxTabsLimit: parseInt(inputMaxTabs.value, 10) || 20,
       whitelist: currentWhitelist
@@ -122,7 +125,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     showToast('Pengaturan tersimpan');
   }
 
-  [toggleAutoDiscard, selectIdleMinutes, toggleThrottleYoutube, toggleAudible, togglePinned, toggleAutoDuplicates, inputMaxTabs].forEach(el => {
+  [toggleAutoDiscard, selectIdleMinutes, toggleThrottleYoutube, toggleAudible, togglePinned, toggleProtectForms, toggleAutoDuplicates, inputMaxTabs].forEach(el => {
     el.addEventListener('change', saveSettings);
   });
 
@@ -180,6 +183,223 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (currentActiveDomain) {
       addDomainToWhitelist(currentActiveDomain);
     }
+  });
+
+  // Elements: Selective Tabs Manager
+  const openTabsCountEl = document.getElementById('openTabsCount');
+  const chkSelectAll = document.getElementById('chkSelectAll');
+  const btnSaveSelectedTabs = document.getElementById('btnSaveSelectedTabs');
+  const btnSleepSelectedTabs = document.getElementById('btnSleepSelectedTabs');
+  const selectedCountEl = document.getElementById('selectedCount');
+  const openTabsListEl = document.getElementById('openTabsList');
+
+  // Helper memvalidasi URL
+  function isValidHttpUrl(string) {
+    try {
+      const url = new URL(string);
+      return url.protocol === 'http:' || url.protocol === 'https:';
+    } catch (_) {
+      return false;
+    }
+  }
+
+  // 2. Muat Statistik Tab & Daftar Tab Terbuka
+  async function refreshStats() {
+    chrome.runtime.sendMessage({ type: 'GET_STATS' }, (res) => {
+      if (res) {
+        totalTabsEl.textContent = res.totalTabs;
+        sleepingTabsEl.textContent = res.sleepingTabs;
+        const savedMB = res.sleepingTabs * 150;
+        estimatedSavedEl.textContent = `${savedMB} MB`;
+      }
+    });
+
+    const { savedGroups = [] } = await chrome.storage.local.get('savedGroups');
+    const totalSavedTabs = savedGroups.reduce((acc, g) => acc + (g.tabs ? g.tabs.length : 0), 0);
+    savedGroupsCountEl.textContent = `${totalSavedTabs} tab`;
+
+    // Ambil Domain Tab Saat ini
+    chrome.runtime.sendMessage({ type: 'GET_CURRENT_TAB_DOMAIN' }, (res) => {
+      if (res && res.domain) {
+        currentActiveDomain = res.domain;
+        currentTabDomainText.textContent = res.domain;
+        btnAddCurrentDomain.style.display = 'block';
+      } else {
+        currentActiveDomain = '';
+        currentTabDomainText.textContent = 'Tidak tersedia';
+        btnAddCurrentDomain.style.display = 'none';
+      }
+    });
+
+    await refreshOpenTabsList();
+  }
+
+  // Render Daftar Tab Jendela Ini (Per Page)
+  async function refreshOpenTabsList() {
+    chrome.runtime.sendMessage({ type: 'GET_WINDOW_TABS' }, (res) => {
+      if (!res || !Array.isArray(res.tabs)) return;
+
+      const tabs = res.tabs;
+      openTabsCountEl.textContent = `${tabs.length} tab`;
+      openTabsListEl.innerHTML = '';
+
+      if (tabs.length === 0) {
+        openTabsListEl.innerHTML = '<div style="text-align:center;font-size:11px;color:#8b949e;padding:10px;">Tidak ada tab</div>';
+        return;
+      }
+
+      tabs.forEach(tab => {
+        const row = document.createElement('div');
+        row.className = 'open-tab-row';
+
+        const left = document.createElement('div');
+        left.className = 'open-tab-left';
+
+        const chk = document.createElement('input');
+        chk.type = 'checkbox';
+        chk.className = 'open-tab-checkbox';
+        chk.dataset.tabId = tab.id;
+        chk.addEventListener('change', updateSelectedTabControls);
+
+        if (tab.favIconUrl && isValidHttpUrl(tab.favIconUrl)) {
+          const icon = document.createElement('img');
+          icon.className = 'open-tab-favicon';
+          icon.src = tab.favIconUrl;
+          icon.onerror = () => { icon.style.display = 'none'; };
+          left.appendChild(chk);
+          left.appendChild(icon);
+        } else {
+          left.appendChild(chk);
+        }
+
+        if (tab.groupTitle || (tab.groupId && tab.groupId > -1)) {
+          const groupBadge = document.createElement('span');
+          groupBadge.className = `tab-group-pill color-${tab.groupColor || 'grey'}`;
+          groupBadge.textContent = tab.groupTitle || 'Grup';
+          left.appendChild(groupBadge);
+        }
+
+        const title = document.createElement('span');
+        title.className = 'open-tab-title';
+        title.textContent = tab.title || tab.url || 'Tab Tanpa Judul';
+        title.title = tab.url;
+        left.appendChild(title);
+
+        const right = document.createElement('div');
+        right.className = 'open-tab-right';
+
+        if (tab.discarded) {
+          const badge = document.createElement('span');
+          badge.className = 'tab-badge-sleep';
+          badge.textContent = '💤 Tidur';
+          right.appendChild(badge);
+        } else if (tab.active) {
+          const badge = document.createElement('span');
+          badge.className = 'tab-badge-active';
+          badge.textContent = '🟢 Aktif';
+          right.appendChild(badge);
+        }
+
+        // Tombol aksi per halaman/tab: OneTab
+        const btnOneTabSingle = document.createElement('button');
+        btnOneTabSingle.className = 'btn-tab-action';
+        btnOneTabSingle.title = 'Simpan tab ini ke OneTab';
+        btnOneTabSingle.textContent = '📑';
+        btnOneTabSingle.addEventListener('click', (e) => {
+          e.stopPropagation();
+          chrome.runtime.sendMessage({ type: 'SAVE_SINGLE_TAB', tabId: tab.id }, () => {
+            showToast('📑 Tab disimpan ke OneTab!');
+            refreshStats();
+          });
+        });
+
+        // Tombol aksi per halaman/tab: Sleep
+        const btnSleepSingle = document.createElement('button');
+        btnSleepSingle.className = 'btn-tab-action';
+        btnSleepSingle.title = 'Tidurkan tab ini';
+        btnSleepSingle.textContent = '💤';
+        btnSleepSingle.addEventListener('click', (e) => {
+          e.stopPropagation();
+          chrome.runtime.sendMessage({ type: 'DISCARD_SINGLE_TAB', tabId: tab.id }, () => {
+            showToast('💤 Tab ditidurkan!');
+            refreshStats();
+          });
+        });
+
+        right.appendChild(btnOneTabSingle);
+        if (!tab.discarded) {
+          right.appendChild(btnSleepSingle);
+        }
+
+        row.appendChild(left);
+        row.appendChild(right);
+        openTabsListEl.appendChild(row);
+      });
+
+      updateSelectedTabControls();
+    });
+  }
+
+  function updateSelectedTabControls() {
+    const checkboxes = document.querySelectorAll('.open-tab-checkbox');
+    const checked = Array.from(checkboxes).filter(c => c.checked);
+    selectedCountEl.textContent = checked.length;
+
+    const hasSelection = checked.length > 0;
+    btnSaveSelectedTabs.disabled = !hasSelection;
+    btnSleepSelectedTabs.disabled = !hasSelection;
+
+    if (checkboxes.length > 0 && checked.length === checkboxes.length) {
+      chkSelectAll.checked = true;
+      chkSelectAll.indeterminate = false;
+    } else if (checked.length > 0) {
+      chkSelectAll.checked = false;
+      chkSelectAll.indeterminate = true;
+    } else {
+      chkSelectAll.checked = false;
+      chkSelectAll.indeterminate = false;
+    }
+  }
+
+  chkSelectAll.addEventListener('change', () => {
+    const checkboxes = document.querySelectorAll('.open-tab-checkbox');
+    checkboxes.forEach(c => { c.checked = chkSelectAll.checked; });
+    updateSelectedTabControls();
+  });
+
+  btnSaveSelectedTabs.addEventListener('click', () => {
+    const checked = document.querySelectorAll('.open-tab-checkbox:checked');
+    const tabIds = Array.from(checked).map(c => parseInt(c.dataset.tabId, 10));
+    if (tabIds.length === 0) return;
+
+    btnSaveSelectedTabs.disabled = true;
+    chrome.runtime.sendMessage({ type: 'SAVE_SELECTED_TABS', tabIds }, (res) => {
+      btnSaveSelectedTabs.disabled = false;
+      if (res && res.success) {
+        showToast(`📑 ${res.count} tab disimpan ke OneTab!`);
+        refreshStats();
+      }
+    });
+  });
+
+  btnSleepSelectedTabs.addEventListener('click', async () => {
+    const checked = document.querySelectorAll('.open-tab-checkbox:checked');
+    const tabIds = Array.from(checked).map(c => parseInt(c.dataset.tabId, 10));
+    if (tabIds.length === 0) return;
+
+    btnSleepSelectedTabs.disabled = true;
+    let count = 0;
+    for (const tabId of tabIds) {
+      await new Promise(resolve => {
+        chrome.runtime.sendMessage({ type: 'DISCARD_SINGLE_TAB', tabId }, () => {
+          count++;
+          resolve();
+        });
+      });
+    }
+    btnSleepSelectedTabs.disabled = false;
+    showToast(`💤 ${count} tab berhasil ditidurkan!`);
+    refreshStats();
   });
 
   // 5. Tombol Aksi

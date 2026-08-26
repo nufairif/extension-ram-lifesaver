@@ -1,12 +1,14 @@
 {
   "manifest_version": 3,
   "name": "RAM Lifesaver - Brave Super Optimizer",
-  "version": "1.1.0",
-  "description": "Penghemat RAM Otomatis: Auto-sleep tab, Whitelist, Deteksi duplikat, YouTube throttler, dan Shortcut keyboard.",
+  "version": "1.2.0",
+  "description": "Penghemat RAM Otomatis: Auto-sleep tab, Proteksi form aktif, Menu klik kanan, Whitelist, OneTab Manager, dan Shortcut keyboard.",
   "permissions": [
     "tabs",
     "storage",
-    "alarms"
+    "alarms",
+    "contextMenus",
+    "tabGroups"
   ],
   "background": {
     "service_worker": "background.js"
@@ -28,6 +30,11 @@
     {
       "matches": ["*://*.youtube.com/*"],
       "js": ["youtube_optimizer.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["http://*/*", "https://*/*"],
+      "js": ["form_protector.js"],
       "run_at": "document_idle"
     }
   ],

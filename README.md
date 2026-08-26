@@ -7,9 +7,14 @@
 ## ✨ Fitur Utama
 
 - 💤 **Auto Tab Discard (Smart Sleep):** Otomatis menidurkan tab yang tidak aktif setelah durasi tertentu (1, 3, 5, 10, atau 15 menit) untuk membebaskan ratusan megabyte RAM.
+- 🛡️ **Form Unsaved Input Protection (Anti Data Loss):** Mendeteksi input form, textarea, dan rich-text editor aktif agar ketikan pengguna tidak hilang karena tab tertidur.
+- 🖱️ **Context Menu (Klik Kanan):** Akses cepat klik kanan untuk menidurkan tab, menambahkan ke whitelist, atau menyatukan seluruh tab.
 - 🎵 **Audio & Pin Immunity:** Tab yang sedang memutar suara (YouTube, Spotify) dan tab yang dipin (*pinned*) aman dari proses peniduran.
 - 🛡️ **Whitelist Domain:** Tentukan website penting (seperti WhatsApp Web, Gmail, Discord) agar tidak pernah ditidurkan.
-- 📑 **OneTab Mode (Satukan Tab):** Mengumpulkan seluruh tab latar belakang ke dalam satu daftar tautan dan menutup halamannya, memangkas penggunaan RAM hingga **95%**.
+- 📑 **OneTab Manager (Satukan Tab):** Mengumpulkan seluruh tab latar belakang ke dalam satu daftar tautan, memangkas RAM hingga **95%**.
+- 🔍 **Search & Filter Tab Tersimpan:** Cari riwayat tab tersimpan secara instan berdasarkan judul atau URL.
+- ✏️ **Rename & Kustomisasi Grup:** Beri nama khusus pada setiap sesi/grup tab yang disimpan.
+- 📋 **Export & Copy as Markdown:** Salin daftar link ke format Markdown (`- [Judul](URL)`) untuk catatan di Notion/Obsidian.
 - 🔍 **Duplicate Tab Cleaner:** Mendeteksi dan menutup tab kembar secara otomatis atau manual dengan satu klik.
 - 🎬 **YouTube Background Throttler:** Menurunkan resolusi video ke 144p saat tab YouTube berada di latar belakang untuk menghemat decoding memori, VRAM, dan bandwidth internet.
 - 🚨 **Tab Limiter & Live Badge:** Menampilkan jumlah tab aktif secara real-time pada ikon ekstensi dan memberi sinyal merah jika melewati ambang batas maksimal.
@@ -42,10 +47,11 @@
 ```text
 ├── icons/                  # Icon ekstensi (16x16, 48x48, 128x128)
 ├── manifest.json           # Konfigurasi Manifest V3
-├── background.js           # Service worker pengelola alarm, memory discarding & hotkeys
+├── background.js           # Service worker pengelola alarm, context menus, discarding & hotkeys
+├── form_protector.js       # Content script pencegah peniduran form aktif (anti data-loss)
 ├── youtube_optimizer.js    # Content script penurun resolusi video background
 ├── popup.html / .css / .js # UI Dashboard, Pengaturan, Whitelist, & Hotkey
-├── saved.html / .css / .js # Halaman manajer OneTab (restore & export/import)
+├── saved.html / .css / .js # Halaman manajer OneTab (search, rename, markdown, & backup)
 └── README.md
 ```
 

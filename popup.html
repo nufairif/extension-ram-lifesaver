@@ -14,7 +14,7 @@
         <div class="logo-icon">⚡</div>
         <div class="brand-text">
           <h1>RAM Lifesaver</h1>
-          <span class="badge">v1.1 Super Optimizer</span>
+          <span class="badge">v1.2 Super Optimizer</span>
         </div>
       </div>
       <div class="status-indicator active" id="engineStatus">Aktif</div>
@@ -73,6 +73,31 @@
             <small>Bersihkan URL kembar yang terbuka</small>
           </div>
         </button>
+      </section>
+
+      <!-- Selective Tab Manager (Pilih Tab per Halaman) -->
+      <section class="selective-tabs-card">
+        <div class="selective-header">
+          <div class="selective-title">
+            <strong>📋 Pilih Tab ke OneTab / Sleep</strong>
+            <small id="openTabsCount">0 tab terbuka</small>
+          </div>
+          <div class="selective-controls">
+            <label class="chk-select-all-label" title="Pilih Semua">
+              <input type="checkbox" id="chkSelectAll"> Semua
+            </label>
+            <button class="btn-mini btn-mini-onetab" id="btnSaveSelectedTabs" disabled title="Simpan tab terpilih ke OneTab">
+              📑 OneTab (<span id="selectedCount">0</span>)
+            </button>
+            <button class="btn-mini btn-mini-sleep" id="btnSleepSelectedTabs" disabled title="Tidurkan tab terpilih">
+              💤 Sleep
+            </button>
+          </div>
+        </div>
+
+        <div class="open-tabs-scroll" id="openTabsList">
+          <!-- List tab dirender via JavaScript -->
+        </div>
       </section>
     </div>
 
@@ -133,6 +158,17 @@
           </div>
           <label class="switch">
             <input type="checkbox" id="togglePinned" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-info">
+            <label for="toggleProtectForms">Lindungi Form Aktif</label>
+            <small>Cegah tidur jika ada teks/form belum disimpan</small>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="toggleProtectForms" checked>
             <span class="slider"></span>
           </label>
         </div>

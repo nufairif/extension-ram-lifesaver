@@ -469,3 +469,207 @@ input:checked + .slider:before {
 .toast.hidden {
   display: none;
 }
+
+/* Selective Tab Manager */
+.selective-tabs-card {
+  background: #181c25;
+  border: 1px solid #282e3d;
+  border-radius: 10px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.selective-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #252b3a;
+  padding-bottom: 6px;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.selective-title strong {
+  font-size: 12px;
+  display: block;
+}
+
+.selective-title small {
+  font-size: 10px;
+  color: #8b949e;
+}
+
+.selective-controls {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.chk-select-all-label {
+  font-size: 10.5px;
+  color: #c9d1d9;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  cursor: pointer;
+}
+
+.btn-mini {
+  padding: 3px 6px;
+  font-size: 10.5px;
+  font-weight: 600;
+  border-radius: 4px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: opacity 0.2s, background-color 0.2s;
+}
+
+.btn-mini:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btn-mini-onetab {
+  background: #252b3a;
+  color: #58a6ff;
+  border-color: #384358;
+}
+
+.btn-mini-onetab:not(:disabled):hover {
+  background: #323a4f;
+}
+
+.btn-mini-sleep {
+  background: #222b28;
+  color: #2ecc71;
+  border-color: #2c4436;
+}
+
+.btn-mini-sleep:not(:disabled):hover {
+  background: #2a3c33;
+}
+
+.open-tabs-scroll {
+  max-height: 170px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding-right: 2px;
+}
+
+.open-tabs-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+
+.open-tabs-scroll::-webkit-scrollbar-thumb {
+  background: #323a4f;
+  border-radius: 4px;
+}
+
+.open-tab-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #12141a;
+  border: 1px solid #252b3a;
+  border-radius: 6px;
+  padding: 5px 6px;
+  gap: 6px;
+  transition: background 0.15s;
+}
+
+.open-tab-row:hover {
+  background: #1d222e;
+}
+
+.open-tab-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow: hidden;
+  flex: 1;
+}
+
+.open-tab-checkbox {
+  cursor: pointer;
+}
+
+.open-tab-favicon {
+  width: 14px;
+  height: 14px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.open-tab-title {
+  font-size: 11.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #e6edf3;
+  cursor: default;
+}
+
+.open-tab-right {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.tab-badge-sleep {
+  font-size: 9.5px;
+  background: rgba(142, 68, 173, 0.25);
+  color: #bb86fc;
+  padding: 1px 4px;
+  border-radius: 3px;
+  border: 1px solid rgba(187, 134, 252, 0.3);
+}
+
+.tab-badge-active {
+  font-size: 9.5px;
+  background: rgba(46, 204, 113, 0.2);
+  color: #2ecc71;
+  padding: 1px 4px;
+  border-radius: 3px;
+  border: 1px solid rgba(46, 204, 113, 0.3);
+}
+
+.btn-tab-action {
+  background: none;
+  border: 1px solid #323a4f;
+  border-radius: 3px;
+  color: #8b949e;
+  font-size: 11px;
+  padding: 1px 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.tab-group-pill {
+  font-size: 9.5px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 4px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  max-width: 90px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  border: 1px solid transparent;
+}
+
+.tab-group-pill.color-blue { background: rgba(26, 115, 232, 0.25); color: #8ab4f8; border-color: rgba(138, 180, 248, 0.4); }
+.tab-group-pill.color-red { background: rgba(217, 48, 37, 0.25); color: #f28b82; border-color: rgba(242, 139, 130, 0.4); }
+.tab-group-pill.color-yellow { background: rgba(242, 153, 0, 0.25); color: #fdd663; border-color: rgba(253, 214, 99, 0.4); }
+.tab-group-pill.color-green { background: rgba(24, 128, 56, 0.25); color: #81c995; border-color: rgba(129, 201, 149, 0.4); }
+.tab-group-pill.color-pink { background: rgba(229, 37, 146, 0.25); color: #ff8bcb; border-color: rgba(255, 139, 203, 0.4); }
+.tab-group-pill.color-purple { background: rgba(161, 66, 244, 0.25); color: #c58af9; border-color: rgba(197, 138, 249, 0.4); }
+.tab-group-pill.color-cyan { background: rgba(0, 123, 131, 0.25); color: #78d9ec; border-color: rgba(120, 217, 236, 0.4); }
+.tab-group-pill.color-orange { background: rgba(250, 144, 62, 0.25); color: #fcad70; border-color: rgba(252, 173, 112, 0.4); }
+.tab-group-pill.color-grey { background: rgba(128, 134, 139, 0.25); color: #dadce0; border-color: rgba(218, 220, 224, 0.4); }
+
+

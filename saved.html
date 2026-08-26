@@ -17,12 +17,23 @@
         </div>
       </div>
       <div class="header-buttons">
+        <button id="btnCopyAllMd" class="btn btn-secondary">📋 Salin Markdown</button>
         <button id="btnExport" class="btn btn-secondary">📥 Export JSON</button>
         <button id="btnImport" class="btn btn-secondary">📤 Import Backup</button>
         <input type="file" id="fileInput" accept=".json" style="display: none;">
         <button id="btnClearAll" class="btn btn-danger">Hapus Semua</button>
       </div>
     </header>
+
+    <!-- Search & Filter Bar -->
+    <div class="search-container">
+      <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="searchInput" placeholder="Cari judul website atau URL tab tersimpan..." autocomplete="off">
+        <button id="btnClearSearch" class="btn-clear-search" style="display: none;">&times;</button>
+      </div>
+      <div id="searchResultsCount" class="search-results-count"></div>
+    </div>
 
     <main id="groupsContainer" class="groups-container">
       <div class="empty-state" id="emptyState">
@@ -31,6 +42,9 @@
         <p>Gunakan tombol "Satukan Tab (OneTab Mode)" di popup ekstensi untuk menyimpan dan meringkas tab aktif Anda.</p>
       </div>
     </main>
+
+    <!-- Toast Floating Feedback -->
+    <div id="toastMessage" class="toast hidden"></div>
   </div>
 
   <script src="saved.js"></script>
